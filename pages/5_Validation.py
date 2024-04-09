@@ -1,12 +1,17 @@
 import streamlit as st
 import pymongo
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+CONNECTION_STRING = os.getenv('CONNECTION_STRING')
 
 # Initialize connection.
 # Uses st.cache_resource to only run once.
 @st.cache_resource
 def init_connection():
-    return pymongo.MongoClient(st.secrets["connection_string"])
+    return pymongo.MongoClient(CONNECTION_STRING)
 
 
 client = init_connection()
