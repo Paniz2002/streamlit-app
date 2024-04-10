@@ -1,7 +1,11 @@
+import re
+
 import requests
-import streamlit as st
 import webbrowser
 import time
+import datetime
+
+from mongodb.connection import *
 
 from pathlib import Path
 
@@ -23,6 +27,9 @@ def add_database_connection(api_url, connection_data):
     except requests.exceptions.RequestException:
         return None
 
+def remove_non_sql(string):
+    return re.sub(r"(\*\*Final Answer:\*\*|```sql|```|\n)", "", string)
+
 def answer_question(api_url, db_connection_id, question):
     request_body = {
         "llm_config": {
@@ -33,12 +40,19 @@ def answer_question(api_url, db_connection_id, question):
             "db_connection_id": db_connection_id,
         }
     }
+
     try:
         with requests.post(api_url, json=request_body, stream=True) as response:
             response.raise_for_status()
             for chunk in response.iter_content(chunk_size=2048):
                 if chunk:
                     response = chunk.decode("utf-8")
+                    print(response + " end \n\n")
+
+                    if "**Final Answer:**" in response:
+                        clean_response = remove_non_sql(response)
+                        record_answer_logs(question, clean_response)
+
                     yield response + "\n"
                     time.sleep(0.1)
     except requests.exceptions.RequestException as e:
@@ -61,6 +75,19 @@ def find_key_by_value(dictionary, target_value):
         if value == target_value:
             return key
     return None
+
+def record_answer_logs(question, answer):
+    mongo_client = init_connection()
+    db = mongo_client.logs
+
+    log = {
+        "prompt_text": question,
+        "sql": answer,
+        "created_at": datetime.datetime.now().timestamp(),
+        "is_checked": False
+    }
+
+    db.logs.insert_one(log)
 
 
 WAITING_TIME_TEXTS = [
