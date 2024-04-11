@@ -90,18 +90,19 @@ for item in items:
     created_at = item['created_at']
     st.subheader(f"Record ID: { id }")
     st.write(f"Question: { prompt_text }")
-    st.write("Answer:")
+    st.write("Highlighted SQL answer:")
     st.markdown("```sql\n{}\n```".format( sql ))
+    st.write("RAW editable SQL answer:")
+    st.text_area("SQL", value=sql, key=f"text_area_{id}" , height=200)
     st.write(f"Created at: {datetime.datetime.utcfromtimestamp(int( created_at )).strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Custom Buttons
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4= st.columns(4)
     with col1:
-        if st.button("Add to golden record!", key=f"gold_{item['_id']}"):
+        if st.button("Add to golden record!", key=f"1_{id}"):
             st.write("ok 1")
             try:
                 prompt_text = item['prompt_text']
-                sql = item['sql']
                 data = {
                     "db_connection_id": st.session_state["database_connection_id"],
                     "prompt_text": prompt_text,
@@ -114,15 +115,23 @@ for item in items:
             time.sleep(1)
             st.rerun()
     with col2:
-        if st.button("Do not add to golden record", key=f"red_{item['_id']}"):
+        if st.button("Do not add to golden record", key=f"2_{item['_id']}"):
             st.write("ok 2")
             update_checked_true(id)
             time.sleep(1)
             st.rerun()
     with col3:
         # TODO test the result of the query showing it in a table
-        if st.button("Test the result of the query", key=f"blue_{item['_id']}"):
+        if st.button("Test the result of the query", key=f"3_{item['_id']}"):
             st.write("ok 3")
+
+    with col4:
+        if st.button("Upload your changes", key=f"4_{item['_id']}"):
+            st.write("ok 4")
+            new_sql = st.session_state[f"text_area_{id}"]
+            update_sql( id, new_sql )
+            time.sleep(1)
+            st.rerun()
 
     st.divider()
 

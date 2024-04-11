@@ -27,6 +27,7 @@ def add_database_connection(api_url, connection_data):
     except requests.exceptions.RequestException:
         return None
 
+
 def remove_non_sql(string):
     return re.sub(r"(\*\*Final Answer:\*\*|```sql|```|\n)", "", string)
 

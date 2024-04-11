@@ -40,3 +40,8 @@ def update_checked_true(id):
     client = init_connection()
     db = client.logs
     db.logs.update_one({"_id": id}, {"$set": {"is_checked": True}})
+
+def update_sql(id, new_sql):
+    client = init_connection()
+    db = client.logs
+    db.logs.update_one({"_id": id}, {"$set": {"sql": new_sql}})
